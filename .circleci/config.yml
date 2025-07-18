@@ -55,7 +55,14 @@ jobs:
           name: Build and Test
           command: ./mvnw clean install # Build, run tests, and generate test coverage reports
 
-          # Store test coverage reports
+      - run:
+        name: Copy WAR file with fixed name
+        command: |
+          MICRO_SERVICE_NAME=$(grep -m1 '<name>' pom.xml | sed -E 's/.*<name>(.*)<\/name>.*/\1/')
+          VERSION=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
+          cp target/${MICRO_SERVICE_NAME}-${VERSION}.war target/app.war
+
+      # Store test coverage reports
       - store_artifacts:
           path: target/site/jacoco
           destination: jacoco-test-reports/
@@ -73,6 +80,10 @@ jobs:
       - store_artifacts:
           path: target/spotbugs.html
           destination: quality-checks/spotbugs
+      - persist_to_workspace:
+          root: .
+          paths:
+            - target/app.war
 
   package:
     executor: java-executor
@@ -98,7 +109,7 @@ jobs:
             
             # Set Jar file name and path variables
             JAR_FILE_NAME="${MICRO_SERVICE_NAME}-${VERSION}.war"
-            JAR_FILE_PATH="target/${JAR_FILE_NAME}"
+            JAR_FILE_PATH="target/app.war"
             
             # Build Docker image using parameters
             docker build \
