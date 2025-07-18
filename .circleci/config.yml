@@ -167,60 +167,60 @@ jobs:
           command: |
             echo "Pushing image: $TAG"
             docker push $<<pipeline.parameters.account-url>>:$TAG  # Push the image to AWS ECR
-    deploy:
-      executor: java-executor
-      working_directory: ~/workspace
-      parameters:
-        family:
-          description: Name of the task definition's family.
-          type: string
-        cluster-name:
-          description: The short name or full ARN of the cluster that hosts the service.
-          type: string
-        service-name:
-          description: The name of the service to update.
-          type: string
-        container-image-name-updates:
-          description: >
-            Use this to update the Docker image names and/or tag names of existing
-  
-            containers that had been defined in the previous task definition.
-  
-            Expected format:
-            container=<container-name>,image-and-tag=<image-name>:<tag-name>|image=<image-name>|tag=<tag-name>,container=...,image-and-tag|image|tag=...,
-  
-            For each container, specify only either "image-and-tag" or "image" or
-            "tag".
-  
-            If "image-and-tag" is specified, the container image will be updated to
-            the value of the name-value pair.
-  
-            If "image" is specified, the image tag defined in the previous task
-            definition will be retained, if exists.
-  
-            If "tag" is specified, the image name defined in the previous task
-            definition will be used.
-          type: string
-      steps:
-        - checkout
-        - attach_workspace:
-            at: ~/workspace
-        - run:
-            name: Export Metadata
-            command: |
-              export TAG="$(cat ~/workspace/tag.txt)"
-              echo "TAG='${TAG}'"
-              echo "export TAG='${TAG}'" >> $BASH_ENV
-        - aws-cli/setup:
-            aws-access-key-id: <<pipeline.parameters.aws-access-key-id>>
-            aws-region: <<pipeline.parameters.region>>
-            aws-secret-access-key: <<pipeline.parameters.aws-secret-access-key>>
-        # Deploy updated Docker image to AWS ECS
-        - aws-ecs/update-service:
-            family: << parameters.family >>
-            cluster-name: << parameters.cluster-name >>
-            service-name: << parameters.service-name >>
-            container-image-name-updates: << parameters.container-image-name-updates >>
+  deploy:
+    executor: java-executor
+    working_directory: ~/workspace
+    parameters:
+      family:
+        description: Name of the task definition's family.
+        type: string
+      cluster-name:
+        description: The short name or full ARN of the cluster that hosts the service.
+        type: string
+      service-name:
+        description: The name of the service to update.
+        type: string
+      container-image-name-updates:
+        description: >
+          Use this to update the Docker image names and/or tag names of existing
+
+          containers that had been defined in the previous task definition.
+
+          Expected format:
+          container=<container-name>,image-and-tag=<image-name>:<tag-name>|image=<image-name>|tag=<tag-name>,container=...,image-and-tag|image|tag=...,
+
+          For each container, specify only either "image-and-tag" or "image" or
+          "tag".
+
+          If "image-and-tag" is specified, the container image will be updated to
+          the value of the name-value pair.
+
+          If "image" is specified, the image tag defined in the previous task
+          definition will be retained, if exists.
+
+          If "tag" is specified, the image name defined in the previous task
+          definition will be used.
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/workspace
+      - run:
+          name: Export Metadata
+          command: |
+            export TAG="$(cat ~/workspace/tag.txt)"
+            echo "TAG='${TAG}'"
+            echo "export TAG='${TAG}'" >> $BASH_ENV
+      - aws-cli/setup:
+          aws-access-key-id: <<pipeline.parameters.aws-access-key-id>>
+          aws-region: <<pipeline.parameters.region>>
+          aws-secret-access-key: <<pipeline.parameters.aws-secret-access-key>>
+      # Deploy updated Docker image to AWS ECS
+      - aws-ecs/update-service:
+          family: << parameters.family >>
+          cluster-name: << parameters.cluster-name >>
+          service-name: << parameters.service-name >>
+          container-image-name-updates: << parameters.container-image-name-updates >>
 
 # Define the workflow
 workflows:
