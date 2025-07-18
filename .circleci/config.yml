@@ -56,11 +56,11 @@ jobs:
           command: ./mvnw clean install # Build, run tests, and generate test coverage reports
 
       - run:
-        name: Copy WAR file with fixed name
-        command: |
-          MICRO_SERVICE_NAME=$(grep -m1 '<name>' pom.xml | sed -E 's/.*<name>(.*)<\/name>.*/\1/')
-          VERSION=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
-          cp target/${MICRO_SERVICE_NAME}-${VERSION}.war target/app.war
+          name: Copy WAR file with fixed name
+          command: |
+            MICRO_SERVICE_NAME=$(grep -m1 '<name>' pom.xml | sed -E 's/.*<name>(.*)<\/name>.*/\1/')
+            VERSION=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
+            cp target/${MICRO_SERVICE_NAME}-${VERSION}.war target/app.war
 
       # Store test coverage reports
       - store_artifacts:
