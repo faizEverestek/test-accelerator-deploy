@@ -110,6 +110,10 @@ jobs:
             export TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
             export WAR_BASENAME=$(basename <<pipeline.parameters.jar-file-path>>)
+            
+            echo "///////"
+            ls -lR
+            echo "///////"
       
             docker build \
             --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
