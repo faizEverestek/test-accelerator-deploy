@@ -102,6 +102,10 @@ jobs:
       - run:
           name: Build and save Docker Image
           command: |
+            ls -l <<pipeline.parameters.jar-file-path>>
+            echo "$<<pipeline.parameters.jar-file-path>>"
+            echo "//////////"
+            ls -lR
             export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
             
