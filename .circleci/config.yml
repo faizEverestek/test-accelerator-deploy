@@ -100,20 +100,21 @@ jobs:
       - setup_remote_docker  # Enable remote Docker support
 
       - run:
+          name: Copy WAR to Docker build context
+          command: |
+            cp <<pipeline.parameters.jar-file-path>> .
+
+      - run:
           name: Build and save Docker Image
           command: |
-            ls -l <<pipeline.parameters.jar-file-path>>
-            echo "$<<pipeline.parameters.jar-file-path>>"
-            echo "//////////"
-            ls -lR
-            export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
+            export TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
-            
-            # Build Docker image using parameters
+            export WAR_BASENAME=$(basename <<pipeline.parameters.jar-file-path>>)
+      
             docker build \
-              --build-arg JAR_FILE_PATH=<<pipeline.parameters.jar-file-path>> \
-              --build-arg JAR_FILE_NAME=<<pipeline.parameters.jar-file-name>> \
-              -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
+            --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
+            --build-arg JAR_FILE_NAME=<<pipeline.parameters.jar-file-name>> \
+            -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
             
             # Save Docker image to a tar file
             docker save -o my-app.tar <<pipeline.parameters.aws-ecr-repo>>:${TAG}
