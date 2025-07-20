@@ -126,6 +126,8 @@ jobs:
             export ECR_URL="$<<pipeline.parameters.aws-account-id>>.dkr.ecr.$<<pipeline.parameters.region>>.amazonaws.com"
             echo "ECR_URL=$ECR_URL"
             echo "export ECR_URL=$ECR_URL" >> $BASH_ENV
+            # Save the tag information for the publish job
+            echo $ECR_URL > ecr_url.txt 
 
       - run:
           name: Build and save Docker Image
@@ -150,6 +152,7 @@ jobs:
           root: /home/circleci/workspace
           paths:
             - tag.txt  # Save the image tag information for the next job
+            - ecr_url.txt # Save the ECR URL for the next job
             - my-app.tar  # Save the built Docker image
 
   publish:
@@ -172,6 +175,10 @@ jobs:
             export TAG="$(cat /home/circleci/workspace/tag.txt)"  # Read the image tag from the file
             echo "TAG='${TAG}'"
             echo "export TAG='${TAG}'" >> $BASH_ENV  # Persist the tag as an environment variable
+            
+            export ECR_URL="$(cat /home/circleci/workspace/ecr_url.txt)"  # Read the image tag from the file
+            echo "ECR_URL='${ECR_URL}'"
+            echo "export ECR_URL='${ECR_URL}'" >> $BASH_ENV  # Persist the tag as an environment variable
 
       # Load the previously build docker image
       - run:
