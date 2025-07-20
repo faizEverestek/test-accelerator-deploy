@@ -177,7 +177,7 @@ git push origin <branch_name>
 1. Go to your **CircleCI Dashboard**
 2. Select your project
 3. The pipeline should be triggered automatically
-4. Monitor all stages (build, publish, deploy) via logs
+4. Monitor all stages (build, package, publish, deploy) via logs
 
 ---
 
