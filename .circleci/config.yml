@@ -27,6 +27,22 @@ parameters:
     default: 1.0.0
     description: Latest version of the Docker image that will be used in the image tag.
     type: string
+  task-definition-family:
+    default: family-3
+    description: Name of the ECS task definition family.
+    type: string
+  ecs-cluster-name:
+    default: cluster-3
+    description: Name or ARN of the ECS cluster hosting the service.
+    type: string
+  ecs-service-name:
+    default: service-3
+    description: Name of the ECS service to update.
+    type: string
+  ecs-service-container-name:
+    default: container-3
+    description: Name of the container within the task definition.
+    type: string
   aws-access-key-id:
     default: AWS_ACCESS_KEY_ID
     description: The access key id of the AWS account, passed as ENV variable.
@@ -180,57 +196,29 @@ jobs:
   deploy:
     executor: java-executor
     working_directory: ~/workspace
-    parameters:
-      family:
-        description: Name of the task definition's family.
-        type: string
-      cluster-name:
-        description: The short name or full ARN of the cluster that hosts the service.
-        type: string
-      service-name:
-        description: The name of the service to update.
-        type: string
-      container-image-name-updates:
-        description: >
-          Use this to update the Docker image names and/or tag names of existing
-
-          containers that had been defined in the previous task definition.
-
-          Expected format:
-          container=<container-name>,image-and-tag=<image-name>:<tag-name>|image=<image-name>|tag=<tag-name>,container=...,image-and-tag|image|tag=...,
-
-          For each container, specify only either "image-and-tag" or "image" or
-          "tag".
-
-          If "image-and-tag" is specified, the container image will be updated to
-          the value of the name-value pair.
-
-          If "image" is specified, the image tag defined in the previous task
-          definition will be retained, if exists.
-
-          If "tag" is specified, the image name defined in the previous task
-          definition will be used.
-        type: string
     steps:
       - checkout
+
       - attach_workspace:
           at: ~/workspace
+
       - run:
-          name: Export Metadata
+          name: Export Image Tag
           command: |
             export TAG="$(cat ~/workspace/tag.txt)"
             echo "TAG='${TAG}'"
             echo "export TAG='${TAG}'" >> $BASH_ENV
+
       - aws-cli/setup:
-          aws-access-key-id: <<pipeline.parameters.aws-access-key-id>>
-          aws-region: <<pipeline.parameters.region>>
-          aws-secret-access-key: <<pipeline.parameters.aws-secret-access-key>>
-      # Deploy updated Docker image to AWS ECS
+          aws-access-key-id: << pipeline.parameters.aws-access-key-id >>
+          aws-region: << pipeline.parameters.region >>
+          aws-secret-access-key: << pipeline.parameters.aws-secret-access-key >>
+
       - aws-ecs/update-service:
-          family: << parameters.family >>
-          cluster-name: << parameters.cluster-name >>
-          service-name: << parameters.service-name >>
-          container-image-name-updates: << parameters.container-image-name-updates >>,tag=${TAG}
+          family: << pipeline.parameters.task-definition-family >>
+          cluster-name: << pipeline.parameters.ecs-cluster-name >>
+          service-name: << pipeline.parameters.ecs-service-name >>
+          container-image-name-updates: container=<< pipeline.parameters.ecs-service-container-name >>,tag=${TAG}
 
 # Define the workflow
 workflows:
@@ -251,10 +239,6 @@ workflows:
           name: deploy
           requires:
             - publish
-          family: family-3
-          cluster-name: cluster-3
-          service-name: service-3
-          container-image-name-updates: container=container-3
 #          filters:
 #            branches:
 #              only:
