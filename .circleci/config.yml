@@ -254,7 +254,7 @@ workflows:
           family: family-3
           cluster-name: cluster-3
           service-name: service-3
-          container-image-name-updates: container=3
+          container-image-name-updates: container=container-3
 #          filters:
 #            branches:
 #              only:
