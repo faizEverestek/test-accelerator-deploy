@@ -28,19 +28,19 @@ parameters:
     description: Latest version of the Docker image that will be used in the image tag.
     type: string
   task-definition-family:
-    default: family-3
+    default: family-4
     description: Name of the ECS task definition family.
     type: string
   ecs-cluster-name:
-    default: cluster-3
+    default: cluster-4
     description: Name or ARN of the ECS cluster hosting the service.
     type: string
   ecs-service-name:
-    default: service-3
+    default: service-4
     description: Name of the ECS service to update.
     type: string
   ecs-service-container-name:
-    default: container-3
+    default: container-4
     description: Name of the container within the task definition.
     type: string
   aws-access-key-id:
@@ -213,6 +213,125 @@ jobs:
           aws-access-key-id: << pipeline.parameters.aws-access-key-id >>
           aws-region: << pipeline.parameters.region >>
           aws-secret-access-key: << pipeline.parameters.aws-secret-access-key >>
+
+      - run:
+          name: Create ECS Cluster if not exists
+          command: |
+            CLUSTER_NAME=<< pipeline.parameters.ecs-cluster-name >>
+
+            if aws ecs describe-clusters --clusters $CLUSTER_NAME | grep -q '"status": "ACTIVE"'; then
+              echo "Cluster $CLUSTER_NAME already exists"
+            else
+              echo "Creating ECS Cluster: $CLUSTER_NAME"
+              aws ecs create-cluster --cluster-name $CLUSTER_NAME
+            fi
+
+      - run:
+          name: Register ECS Task Definition if not exists
+          command: |
+            FAMILY_NAME=<< pipeline.parameters.task-definition-family >>
+            CONTAINER_NAME=<< pipeline.parameters.ecs-service-container-name >>
+            IMAGE_URL=$<< pipeline.parameters.account-url >>:${TAG}
+
+            EXISTING=$(aws ecs describe-task-definition --task-definition $FAMILY_NAME 2>/dev/null || true)
+
+            if echo "$EXISTING" | grep -q 'taskDefinition'; then
+              echo "Task definition $FAMILY_NAME already exists"
+            else
+              echo "Registering new task definition for $FAMILY_NAME"
+              aws ecs register-task-definition \
+                --family $FAMILY_NAME \
+                --network-mode awsvpc \
+                --requires-compatibilities FARGATE \
+                --cpu "1024" \
+                --memory "3072" \
+                --execution-role-arn arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/ecsTaskExecutionRole \
+                --container-definitions "[
+                  {
+                    \"name\": \"$CONTAINER_NAME\",
+                    \"image\": \"$IMAGE_URL\",
+                    \"essential\": true,
+                    \"portMappings\": [
+                      {
+                        \"containerPort\": 8080,
+                        \"hostPort\": 8080,
+                        \"protocol\": \"tcp\",
+                        \"appProtocol\": \"http\",
+            
+                      }
+                    ]
+                  }
+                ]"
+            fi
+
+      - run:
+          name: Create ECS Service if not exists
+          command: |
+            CLUSTER_NAME=<< pipeline.parameters.ecs-cluster-name >>
+            SERVICE_NAME=<< pipeline.parameters.ecs-service-name >>
+            FAMILY_NAME=<< pipeline.parameters.task-definition-family >>
+            VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output text)
+
+            echo "Creating security group to allow port 8080..."
+            SG_ID=$(aws ec2 create-security-group \
+              --group-name "${SERVICE_NAME}-sg" \
+              --description "Allow port 8080 access for ECS service" \
+              --vpc-id $VPC_ID \
+              --query "GroupId" \
+              --output text)
+
+            aws ec2 authorize-security-group-ingress \
+              --group-id $SG_ID \
+              --protocol tcp \
+              --port 8080 \
+              --cidr 0.0.0.0/0
+
+            SUBNET_ID=$(aws ec2 describe-subnets \
+              --filters "Name=default-for-az,Values=true" \
+              --query "Subnets[0].SubnetId" \
+              --output text)
+
+            SERVICE_EXISTS=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME 2>/dev/null || true)
+
+            if echo "$SERVICE_EXISTS" | grep -q '"status": "ACTIVE"'; then
+              echo "Service $SERVICE_NAME already exists"
+            else
+              echo "Creating service $SERVICE_NAME in cluster $CLUSTER_NAME"
+              aws ecs create-service \
+                --cluster $CLUSTER_NAME \
+                --service-name $SERVICE_NAME \
+                --task-definition $FAMILY_NAME \
+                --desired-count 1 \
+                --launch-type FARGATE \
+                --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SG_ID],assignPublicIp=ENABLED}"
+            fi
+
+      - run:
+          name: Wait for ECS Service to become ACTIVE
+          command: |
+            CLUSTER_NAME=<< pipeline.parameters.ecs-cluster-name >>
+            SERVICE_NAME=<< pipeline.parameters.ecs-service-name >>
+
+            echo "Waiting for ECS service $SERVICE_NAME to become ACTIVE..."
+
+            for i in {1..12}; do
+              STATUS=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME \
+                --query "services[0].status" --output text)
+
+              echo "Current status: $STATUS"
+              if [ "$STATUS" = "ACTIVE" ]; then
+                echo "Service is now ACTIVE"
+                break
+              fi
+
+              echo "Not ready yet... waiting 5s"
+              sleep 5
+            done
+
+            if [ "$STATUS" != "ACTIVE" ]; then
+              echo "Timed out waiting for ECS service to become ACTIVE"
+              exit 1
+            fi
 
       - aws-ecs/update-service:
           family: << pipeline.parameters.task-definition-family >>
