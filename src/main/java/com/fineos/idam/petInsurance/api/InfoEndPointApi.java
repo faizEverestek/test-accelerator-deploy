@@ -8,14 +8,13 @@ ALL RIGHTS RESERVED
 package com.fineos.idam.petInsurance.api;
 
 import jakarta.servlet.ServletContext;
-import org.springframework.boot.actuate.info.Info;
-import org.springframework.boot.actuate.info.InfoContributor;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.springframework.boot.actuate.info.Info;
+import org.springframework.boot.actuate.info.InfoContributor;
+import org.springframework.stereotype.Component;
 
 /**
  * A Spring Boot {@link InfoContributor} implementation to provide additional information about the application,
@@ -24,9 +23,7 @@ import java.util.jar.Manifest;
 @Component
 public class InfoEndPointApi implements InfoContributor {
 
-    /**
-     * ServletContext for accessing application level parameters and resources.
-     */
+    /** ServletContext for accessing application level parameters and resources. */
     private final ServletContext servletContext;
 
     /**
@@ -46,11 +43,11 @@ public class InfoEndPointApi implements InfoContributor {
     @Override
     public void contribute(Info.Builder builder) {
         try {
-        InputStream manifestStream = servletContext.getResourceAsStream("META-INF/MANIFEST.MF");
+            InputStream manifestStream = servletContext.getResourceAsStream("META-INF/MANIFEST.MF");
 
-        if (manifestStream == null) {
-        throw new IllegalStateException("MANIFEST.MF is missing in the war");
-        }
+            if (manifestStream == null) {
+                throw new IllegalStateException("MANIFEST.MF is missing in the war");
+            }
 
             Manifest manifest = new Manifest(manifestStream);
             Attributes attributes = manifest.getMainAttributes();

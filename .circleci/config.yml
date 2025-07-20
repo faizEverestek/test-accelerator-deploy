@@ -12,35 +12,35 @@ executors:
 # Define pipeline parameters, change default values accordingly.
 parameters:
   jar-file-name:
-    default: # CHANGE_ME
+    default: petInsurance-1.0.0.war
     description: Name of the generated JAR/WAR file of the project.
     type: string
   jar-file-path:
-    default: # CHANGE_ME
+    default: target/petInsurance-1.0.0.war
     description: Path where the generated JAR/WAR file is located.
     type: string
   aws-ecr-repo:
-    default: # CHANGE_ME
+    default: repo-2
     description: Name of the Amazon ECR repository, where the docker image with be pushed after successful build.
     type: string
   docker-image-version:
-    default: # CHANGE_ME
+    default: 1.0.0
     description: Latest version of the Docker image that will be used in the image tag.
     type: string
   task-definition-family:
-    default: # CHANGE_ME
+    default: family-2
     description: Name of the ECS task definition family.
     type: string
   ecs-cluster-name:
-    default: # CHANGE_ME
+    default: cluster-2
     description: Name or ARN of the ECS cluster hosting the service.
     type: string
   ecs-service-name:
-    default: # CHANGE_ME
+    default: service-2
     description: Name of the ECS service to update.
     type: string
   ecs-service-container-name:
-    default: # CHANGE_ME
+    default: container-2
     description: Name of the container within the task definition.
     type: string
   aws-access-key-id:

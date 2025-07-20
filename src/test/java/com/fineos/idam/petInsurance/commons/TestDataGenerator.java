@@ -16,9 +16,9 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -45,8 +45,8 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 /**
- * A utility class that generates test instances for any given class using reflection.
- * This is particularly useful for testing purposes where default instances of classes are required.
+ * A utility class that generates test instances for any given class using reflection. This is particularly useful for
+ * testing purposes where default instances of classes are required.
  */
 @SuppressWarnings("all")
 public final class TestDataGenerator {
@@ -61,11 +61,11 @@ public final class TestDataGenerator {
     }
 
     /**
-     * Creates a test instance of the specified class by populating its fields with default values
-     * and using the constructor that matches the field types.
+     * Creates a test instance of the specified class by populating its fields with default values and using the
+     * constructor that matches the field types.
      *
      * @param testClass The class for which a test instance is to be created.
-     * @param <T>       The type of the class for which the test instance is generated.
+     * @param <T> The type of the class for which the test instance is generated.
      * @return An instance of the specified class with default values set for its fields.
      * @throws RuntimeException If the instance creation fails (e.g., due to missing constructor or reflection issues).
      */
@@ -89,15 +89,15 @@ public final class TestDataGenerator {
             // Return an instance using the constructor
             return constructor.newInstance(parameterValues.toArray());
 
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-                 InvocationTargetException e) {
+        } catch (NoSuchMethodException
+                | InstantiationException
+                | IllegalAccessException
+                | InvocationTargetException e) {
             throw new RuntimeException("Failed to create test instance for: " + testClass.getSimpleName(), e);
         }
     }
 
-    /**
-     * A mapping of Java types to their default values for quick lookup.
-     */
+    /** A mapping of Java types to their default values for quick lookup. */
     private static final Map<Class<?>, Object> DEFAULT_VALUES = new HashMap<>();
 
     static {
@@ -161,9 +161,9 @@ public final class TestDataGenerator {
         DEFAULT_VALUES.put(OptionalDouble.class, OptionalDouble.empty());
 
         // Arrays
-        DEFAULT_VALUES.put(int[].class, new int[] { 1, 2, 3 });
-        DEFAULT_VALUES.put(double[].class, new double[] { 1.0, 2.0, 3.0 });
-        DEFAULT_VALUES.put(String[].class, new String[] { "A", "B", "C" });
+        DEFAULT_VALUES.put(int[].class, new int[] {1, 2, 3});
+        DEFAULT_VALUES.put(double[].class, new double[] {1.0, 2.0, 3.0});
+        DEFAULT_VALUES.put(String[].class, new String[] {"A", "B", "C"});
         DEFAULT_VALUES.put(Object[].class, new Object[] {});
 
         // BigDecimal & BigInteger
@@ -173,11 +173,9 @@ public final class TestDataGenerator {
 
     /**
      * Retrieves the default value for the specified class type.
-     * <p>
-     * If the given class is an {@code Enum}, the first available constant is
-     * returned. If the type is not found in the predefined defaults, {@code null}
-     * is returned.
-     * </p>
+     *
+     * <p>If the given class is an {@code Enum}, the first available constant is returned. If the type is not found in
+     * the predefined defaults, {@code null} is returned.
      *
      * @param type The class type of the field for which a default value is required.
      * @return A default value corresponding to the input type, or {@code null} if no specific value is defined.

@@ -8,50 +8,42 @@ ALL RIGHTS RESERVED
 package com.fineos.idam.petInsurance.api;
 
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 /**
  * Unit tests for {@link ApiUtil} class.
  *
- * <p>This test class verifies the functionality of the {@code setExampleResponse} method from
- * the {@link ApiUtil} utility class. It ensures that the method behaves as expected
- * under various conditions, including normal execution, null response scenarios, and
- * cases where an I/O exception occurs.
+ * <p>This test class verifies the functionality of the {@code setExampleResponse} method from the {@link ApiUtil}
+ * utility class. It ensures that the method behaves as expected under various conditions, including normal execution,
+ * null response scenarios, and cases where an I/O exception occurs.
  *
- * <p>Mock objects and {@link Mockito} framework are used to simulate the behavior of
- * {@link NativeWebRequest} and {@link HttpServletResponse}.
+ * <p>Mock objects and {@link Mockito} framework are used to simulate the behavior of {@link NativeWebRequest} and
+ * {@link HttpServletResponse}.
  */
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 class ApiUtilTest {
 
-    /**
-     * Mock representation of a {@link NativeWebRequest} for testing purposes.
-     */
+    /** Mock representation of a {@link NativeWebRequest} for testing purposes. */
     private NativeWebRequest nativeWebRequest;
 
-    /**
-     * Mock representation of an {@link HttpServletResponse} for testing purposes.
-     */
+    /** Mock representation of an {@link HttpServletResponse} for testing purposes. */
     private HttpServletResponse httpServletResponse;
 
-    /**
-     * A {@link StringWriter} used to capture response output during tests.
-     */
+    /** A {@link StringWriter} used to capture response output during tests. */
     private StringWriter responseWriter;
 
     /**
      * Sets up the mock objects before each test execution.
      *
-     * <p>This method initializes the mock {@link NativeWebRequest} and {@link HttpServletResponse},
-     * and prepares a {@link StringWriter} to capture the response output.
+     * <p>This method initializes the mock {@link NativeWebRequest} and {@link HttpServletResponse}, and prepares a
+     * {@link StringWriter} to capture the response output.
      *
      * @throws IOException If an I/O error occurs while setting up the response writer.
      */
@@ -62,14 +54,11 @@ class ApiUtilTest {
         responseWriter = new StringWriter();
 
         Mockito.when(nativeWebRequest.getNativeResponse(HttpServletResponse.class))
-               .thenReturn(httpServletResponse);
-        Mockito.when(httpServletResponse.getWriter())
-               .thenReturn(new PrintWriter(responseWriter));
+                .thenReturn(httpServletResponse);
+        Mockito.when(httpServletResponse.getWriter()).thenReturn(new PrintWriter(responseWriter));
     }
 
-    /**
-     * Tests that the {@code setExampleResponse} method correctly sets headers and writes the response body.
-     */
+    /** Tests that the {@code setExampleResponse} method correctly sets headers and writes the response body. */
     @Test
     void testSetExampleResponseSuccess() {
         String contentType = "application/json";
@@ -80,30 +69,26 @@ class ApiUtilTest {
         Mockito.verify(httpServletResponse).setCharacterEncoding("UTF-8");
         Mockito.verify(httpServletResponse).addHeader("Content-Type", contentType);
         Assertions.assertEquals(
-            exampleResponse,
-            responseWriter.toString(),
-            "The response body does not match the expected example response."
-        );
+                exampleResponse,
+                responseWriter.toString(),
+                "The response body does not match the expected example response.");
     }
 
-    /**
-     * Tests that an {@code IllegalStateException} is thrown when {@link HttpServletResponse} is null.
-     */
+    /** Tests that an {@code IllegalStateException} is thrown when {@link HttpServletResponse} is null. */
     @Test
     void testSetExampleResponseNullResponse() {
-        Mockito.when(nativeWebRequest.getNativeResponse(HttpServletResponse.class)).thenReturn(null);
+        Mockito.when(nativeWebRequest.getNativeResponse(HttpServletResponse.class))
+                .thenReturn(null);
 
         IllegalStateException exception = Assertions.assertThrows(
-            IllegalStateException.class,
-            () -> ApiUtil.setExampleResponse(nativeWebRequest, "application/json", "{}"),
-            "Expected IllegalStateException due to null HttpServletResponse, but it was not thrown."
-        );
+                IllegalStateException.class,
+                () -> ApiUtil.setExampleResponse(nativeWebRequest, "application/json", "{}"),
+                "Expected IllegalStateException due to null HttpServletResponse, but it was not thrown.");
 
         Assertions.assertEquals(
-            "HttpServletResponse is null",
-            exception.getMessage(),
-            "The exception message does not match the expected message."
-        );
+                "HttpServletResponse is null",
+                exception.getMessage(),
+                "The exception message does not match the expected message.");
     }
 
     /**
@@ -117,24 +102,20 @@ class ApiUtilTest {
         Mockito.when(httpServletResponse.getWriter()).thenThrow(new IOException("Test IO Exception"));
 
         ApiUtil.ResponseProcessingException exception = Assertions.assertThrows(
-            ApiUtil.ResponseProcessingException.class,
-            () -> ApiUtil.setExampleResponse(nativeWebRequest, "application/json", "{}"),
-            "Expected ResponseProcessingException to be thrown, but it was not."
-        );
+                ApiUtil.ResponseProcessingException.class,
+                () -> ApiUtil.setExampleResponse(nativeWebRequest, "application/json", "{}"),
+                "Expected ResponseProcessingException to be thrown, but it was not.");
 
         Assertions.assertEquals(
-            "Error writing response",
-            exception.getMessage(),
-            "The exception message does not match the expected message."
-        );
+                "Error writing response",
+                exception.getMessage(),
+                "The exception message does not match the expected message.");
         Assertions.assertNotNull(exception.getCause(), "The cause of the exception should not be null.");
-        Assertions.assertInstanceOf(IOException.class, exception.getCause(),
-            "The cause of the exception should be of type IOException."
-        );
+        Assertions.assertInstanceOf(
+                IOException.class, exception.getCause(), "The cause of the exception should be of type IOException.");
         Assertions.assertEquals(
-            "Test IO Exception",
-            exception.getCause().getMessage(),
-            "The cause message does not match the expected message."
-        );
+                "Test IO Exception",
+                exception.getCause().getMessage(),
+                "The cause message does not match the expected message.");
     }
 }
