@@ -123,7 +123,7 @@ jobs:
       - run:
           name: Construct ECR Account URL
           command: |
-            export ECR_URL="${<<pipeline.parameters.aws-account-id>>}.dkr.ecr.<<pipeline.parameters.region>>.amazonaws.com"
+            export ECR_URL="$<<pipeline.parameters.aws-account-id>>.dkr.ecr.$<<pipeline.parameters.region>>.amazonaws.com"
             echo "ECR_URL=$ECR_URL"
             echo "export ECR_URL=$ECR_URL" >> $BASH_ENV
 
@@ -183,7 +183,7 @@ jobs:
           command: |
             REPO_NAME=<< pipeline.parameters.aws-ecr-repo >>
             ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-            REGION=<< pipeline.parameters.region >>
+            REGION=$<< pipeline.parameters.region >>
             
             echo "Checking if ECR repo $REPO_NAME exists..."
             if ! aws ecr describe-repositories --repository-names "$REPO_NAME" > /dev/null 2>&1; then
