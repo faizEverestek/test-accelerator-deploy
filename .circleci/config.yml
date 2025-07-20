@@ -12,35 +12,35 @@ executors:
 # Define pipeline parameters, change default values accordingly.
 parameters:
   jar-file-name:
-    default: petInsurance-1.0.0.war
+    default: # CHANGE_ME
     description: Name of the generated JAR/WAR file of the project.
     type: string
   jar-file-path:
-    default: target/petInsurance-1.0.0.war
+    default: # CHANGE_ME
     description: Path where the generated JAR/WAR file is located.
     type: string
   aws-ecr-repo:
-    default: accelerator-test
+    default: # CHANGE_ME
     description: Name of the Amazon ECR repository, where the docker image with be pushed after successful build.
     type: string
   docker-image-version:
-    default: 1.0.0
+    default: # CHANGE_ME
     description: Latest version of the Docker image that will be used in the image tag.
     type: string
   task-definition-family:
-    default: family-4
+    default: # CHANGE_ME
     description: Name of the ECS task definition family.
     type: string
   ecs-cluster-name:
-    default: cluster-4
+    default: # CHANGE_ME
     description: Name or ARN of the ECS cluster hosting the service.
     type: string
   ecs-service-name:
-    default: service-4
+    default: # CHANGE_ME
     description: Name of the ECS service to update.
     type: string
   ecs-service-container-name:
-    default: container-4
+    default: # CHANGE_ME
     description: Name of the container within the task definition.
     type: string
   aws-access-key-id:
@@ -123,14 +123,15 @@ jobs:
       - run:
           name: Build and save Docker Image
           command: |
-            export TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+            export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
             export WAR_BASENAME=$(basename <<pipeline.parameters.jar-file-path>>)
-      
+            
+            # Build Docker image using parameters
             docker build \
-            --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
-            --build-arg JAR_FILE_NAME=<<pipeline.parameters.jar-file-name>> \
-            -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
+              --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
+              --build-arg JAR_FILE_NAME=<<pipeline.parameters.jar-file-name>> \
+              -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
             
             # Save Docker image to a tar file
             docker save -o my-app.tar <<pipeline.parameters.aws-ecr-repo>>:${TAG}
@@ -170,6 +171,24 @@ jobs:
           name: Load Docker image
           command: docker load -i /home/circleci/workspace/my-app.tar  # Load the saved Docker image
 
+      - run:
+          name: Ensure ECR Repository Exists
+          command: |
+            REPO_NAME=<< pipeline.parameters.repo-name >>
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            REGION=<< pipeline.parameters.region >>
+            
+            echo "Checking if ECR repo $REPO_NAME exists..."
+            if ! aws ecr describe-repositories --repository-names "$REPO_NAME" > /dev/null 2>&1; then
+              echo "ECR repo $REPO_NAME does not exist. Creating it now..."
+              aws ecr create-repository \
+                --repository-name "$REPO_NAME" \
+                --image-scanning-configuration scanOnPush=true \
+                --region "$REGION"
+            else
+              echo "ECR repo $REPO_NAME already exists."
+            fi
+
       # Authenticate with AWS ECR.
       - run:
           name: Login to ECR
@@ -198,21 +217,18 @@ jobs:
     working_directory: ~/workspace
     steps:
       - checkout
-
       - attach_workspace:
           at: ~/workspace
-
       - run:
-          name: Export Image Tag
+          name: Export Metadata
           command: |
             export TAG="$(cat ~/workspace/tag.txt)"
             echo "TAG='${TAG}'"
             echo "export TAG='${TAG}'" >> $BASH_ENV
-
       - aws-cli/setup:
-          aws-access-key-id: << pipeline.parameters.aws-access-key-id >>
-          aws-region: << pipeline.parameters.region >>
-          aws-secret-access-key: << pipeline.parameters.aws-secret-access-key >>
+          aws-access-key-id: <<pipeline.parameters.aws-access-key-id>>
+          aws-region: <<pipeline.parameters.region>>
+          aws-secret-access-key: <<pipeline.parameters.aws-secret-access-key>>
 
       - run:
           name: Create ECS Cluster if not exists

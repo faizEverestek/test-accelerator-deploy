@@ -111,17 +111,18 @@ class CustomErrorDecoderTest {
      */
     private Response createResponse(int statusCode) {
         Request request = Request.create(
-                Request.HttpMethod.GET,
-                "http://localhost/test",
-                Collections.emptyMap(),
-                null,
-                StandardCharsets.UTF_8,
-                null);
+            Request.HttpMethod.GET,
+            "http://localhost/test",
+            Collections.emptyMap(),
+            null,
+            StandardCharsets.UTF_8,
+            null
+        );
 
         return Response.builder()
-                .request(request)
-                .status(statusCode)
-                .reason("Mock Response")
-                .build();
+            .request(request)
+            .status(statusCode)
+            .reason("Mock Response")
+            .build();
     }
 }
