@@ -147,10 +147,10 @@ Once the application is running, you can access the following endpoints in your 
 1. In your project on CircleCI, navigate to **Project Settings > Environment Variables**
 2. Add the following variables:
 
-  * `AWS_ACCESS_KEY_ID`: IAM user key for deploying resources
-  * `AWS_SECRET_ACCESS_KEY`: IAM user secret
+  * `AWS_ACCESS_KEY_ID`: IAM user access key for deploying resources
+  * `AWS_SECRET_ACCESS_KEY`: IAM user secret access key
   * `AWS_DEFAULT_REGION`: AWS region (e.g., `ap-south-1`)
-  * `AWS_ECR_ACCOUNT_URL`: ECR account URL (e.g., `123456789012.dkr.ecr.ap-south-1.amazonaws.com`)
+  * `AWS_ACCOUNT_ID`: AWS account ID (e.g., `123456789012`)
 
 ---
 
