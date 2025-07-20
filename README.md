@@ -1,24 +1,28 @@
-# 🦩 petInsurance
+# 🥩 petInsurance
 
 > A lightweight microservice built with Java 21 and powered by Maven or Gradle for modern development needs.
 
 ---
 
-## 📜 Index
+## 📌 Index
 
 * [Prerequisites](#prerequisites)
 * [Code Cleanup & Build](#code-cleanup--build)
 
-   * [Using Maven](#using-maven)
-   * [Using Gradle](#using-gradle)
+  * [Using Maven](#using-maven)
+  * [Using Gradle](#using-gradle)
 * [Run the Application](#run-the-application)
 * [API Endpoints](#api-endpoints)
+* [Push Project to GitHub](#push-project-to-github)
 * [Integrate with CircleCI](#integrate-with-circleci)
 
-   * [1. Update CircleCI Config](#1-update-circleci-config)
-   * [2. Add Project to CircleCI](#2-add-project-to-circleci)
-   * [3. Commit & Trigger Build](#3-commit--trigger-build)
-   * [4. Verify Build Status](#4-verify-build-status)
+  * [1. Add Project to CircleCI](#1-add-project-to-circleci)
+  * [2. Configure Environment Variables](#2-configure-environment-variables)
+  * [3. Update CircleCI Config](#3-update-circleci-config)
+  * [4. Commit & Trigger Build](#4-commit--trigger-build)
+  * [5. Verify Build Status](#5-verify-build-status)
+  * [6. View Build Artifacts](#6-view-build-artifacts)
+* [Verify ECS Deployment](#verify-ecs-deployment)
 
 ---
 
@@ -35,7 +39,7 @@ Ensure your system has the following installed:
 
 ---
 
-## 🧺 Code Cleanup & Build
+## 🮺 Code Cleanup & Build
 
 Before running the application, perform code formatting, code rewriting, and build the project using the following commands.
 
@@ -92,56 +96,112 @@ Once the application is running, you can access the following endpoints in your 
 
 ---
 
-## 🔄 Integrate with CircleCI
+## 🗂️ Push Project to GitHub
 
-You can set up CircleCI to automatically build, test, and validate your project on every commit.
+1. **Create a GitHub Repository**
+
+  * Go to [https://github.com](https://github.com) and create a new repository.
+
+2. **Clone the Repository Locally**
+
+   ```bash
+   git clone https://github.com/<your-username>/<your-repo>.git
+   cd <your-repo>
+   ```
+
+3. **Copy Project Files into the Repo**
+
+   ```bash
+   cp -r /path/to/your/project/* .
+   ```
+
+4. **Initial Commit**
+
+   ```bash
+   git add .
+   git commit -m "initial commit"
+   ```
+
+5. **Push to GitHub**
+
+   ```bash
+   git push origin main
+   ```
 
 ---
 
-### 1. Update CircleCI Config
+## ♻️ Integrate with CircleCI
 
-Edit the parameters in `.circleci/config.yml` file according to your project specifications, example:
-
-```yaml
-parameters:
-  aws-ecr-repo:
-  default: # aws-ecr-repo
-  description: Name of the Amazon ECR repository
-  type: string
-```
-
----
-
-### 2. Add Project to CircleCI
+### 1. Add Project to CircleCI
 
 1. Go to [https://circleci.com](https://circleci.com)
-2. Sign in with your GitHub or Bitbucket account.
-3. Click **"Add Project"**
-4. Find your repository and click **"Set Up Project"**
-5. Choose your config file location (`.circleci/config.yml`)
-6. Click **"Start Building"**
+2. Log in using GitHub.
+3. Click on **"Add Project"** from your dashboard.
+4. Find your repository and click **"Set Up Project"**.
+5. Choose the configuration file location: `.circleci/config.yml`
 
 ---
 
-### 3. Commit & Trigger Build
+### 2. Configure Environment Variables
 
-After updating your CircleCI config:
+1. In your project on CircleCI, navigate to **Project Settings > Environment Variables**
+2. Add the following variables:
+
+  * `AWS_ACCESS_KEY_ID`: IAM user key for deploying resources
+  * `AWS_SECRET_ACCESS_KEY`: IAM user secret
+  * `AWS_DEFAULT_REGION`: AWS region (e.g., `ap-south-1`)
+  * `AWS_ECR_ACCOUNT_URL`: ECR account URL (e.g., `123456789012.dkr.ecr.ap-south-1.amazonaws.com`)
+
+---
+
+### 3. Update CircleCI Config
+
+Open `.circleci/config.yml` and make sure all placeholders marked with `CHANGE_ME` are properly updated according to your setup.
+
+> ℹ️ **Note**: This pipeline is intelligent enough to create all required AWS resources (like ECS cluster, task definition, service, ECR repo, security group) if they do not already exist. So you don’t need to manually set them up!
+
+---
+
+### 4. Commit & Trigger Build
 
 ```bash
 git add .circleci/config.yml
-git commit -m "Configure CircleCI for build automation"
+git commit -m "Configure CircleCI pipeline for ECS deployment"
 git push origin <branch_name>
 ```
 
-Replace `<branch_name>` with your working branch.
+---
+
+### 5. Verify Build Status
+
+1. Go to your **CircleCI Dashboard**
+2. Select your project
+3. The pipeline should be triggered automatically
+4. Monitor all stages (build, publish, deploy) via logs
 
 ---
 
-### 4. Verify Build Status
+### 6. View Build Artifacts
 
-1. Go to the **CircleCI Dashboard**
-2. Select your project
-3. You'll see the pipeline run triggered by your last push
-4. Monitor logs for build, test, and deployment stages
+1. In the CircleCI build view, click on a job (e.g., `build`)
+2. Navigate to the **Artifacts** tab
+3. You’ll find any uploaded reports, tagged image info, or build logs here
+
+---
+
+## 🔍 Verify ECS Deployment
+
+1. **Login to AWS Console** and go to the **ECS** section
+2. Select the **Cluster** you created or updated
+3. Go to the **Services** tab and find the most recent service created
+4. Click the **Task** under the running service
+5. Scroll to **Network** section and find the **Public IP** under ENI (Elastic Network Interface)
+6. Access the deployed app via:
+
+```http
+http://<PUBLIC_IP>:8080/swagger-ui/index.html
+```
+
+If everything is successful, you should see the **Swagger UI** live from your ECS deployment! 🎉
 
 ---

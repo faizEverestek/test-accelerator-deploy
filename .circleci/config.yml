@@ -209,6 +209,7 @@ jobs:
       - run:
           name: Login to ECR
           command: |
+            echo "${ECR_URL}"
             aws ecr get-login-password --region $<<pipeline.parameters.region>> | docker login --username AWS --password-stdin $ECR_URL
 
       # Create a new tag for docker image to push into ECR
