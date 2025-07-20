@@ -304,7 +304,16 @@ jobs:
                         \"protocol\": \"tcp\",
                         \"appProtocol\": \"http\"
                       }
-                    ]
+                    ],
+                    \"logConfiguration\": {
+                        \"logDriver\": \"awslogs\",
+                        \"options\": {
+                          \"awslogs-group\": \"/ecs/$FAMILY_NAME\",
+                          \"awslogs-create-group\": \"true\",
+                          \"awslogs-region\": \"$<<pipeline.parameters.region>>\",
+                          \"awslogs-stream-prefix\": \"ecs\"
+                        }
+                    }
                   }
                 ]"
             fi
