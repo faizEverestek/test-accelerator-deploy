@@ -110,15 +110,6 @@ jobs:
             export TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
             export WAR_BASENAME=$(basename <<pipeline.parameters.jar-file-path>>)
-            
-            echo "///////"
-            ls -lR
-            echo "///////"
-            
-            # Extract microservice name and version from pom.xml
-            MICRO_SERVICE_NAME=$(grep -m1 '<name>' pom.xml | sed -E 's/.*<name>(.*)<\/name>.*/\1/')
-            
-            mkdir /opt/${MICRO_SERVICE_NAME}
       
             docker build \
             --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
