@@ -126,7 +126,7 @@ jobs:
             export ECR_URL="$<<pipeline.parameters.aws-account-id>>.dkr.ecr.$<<pipeline.parameters.region>>.amazonaws.com"
             echo "ECR_URL=$ECR_URL"
             echo "export ECR_URL=$ECR_URL" >> $BASH_ENV
-            # Save the tag information for the publish job
+            # Save the ECR_URL for the publish job
             echo $ECR_URL > ecr_url.txt 
 
       - run:
@@ -176,9 +176,9 @@ jobs:
             echo "TAG='${TAG}'"
             echo "export TAG='${TAG}'" >> $BASH_ENV  # Persist the tag as an environment variable
             
-            export ECR_URL="$(cat /home/circleci/workspace/ecr_url.txt)"  # Read the image tag from the file
+            export ECR_URL="$(cat /home/circleci/workspace/ecr_url.txt)"  # Read the ECR_URL from the file
             echo "ECR_URL='${ECR_URL}'"
-            echo "export ECR_URL='${ECR_URL}'" >> $BASH_ENV  # Persist the tag as an environment variable
+            echo "export ECR_URL='${ECR_URL}'" >> $BASH_ENV  # Persist the ECR_URL as an environment variable
 
       # Load the previously build docker image
       - run:
@@ -223,14 +223,14 @@ jobs:
       - run:
           name: Tag Docker Image
           command: |
-            docker tag <<pipeline.parameters.aws-ecr-repo>>:${TAG} $ECR_URL:${TAG}
+            docker tag <<pipeline.parameters.aws-ecr-repo>>:${TAG} $ECR_URL/<<pipeline.parameters.aws-ecr-repo>>:${TAG}
 
       # Push docker image to ECR
       - run:
           name: Push Docker Image to AWS ECR
           command: |
             echo "Pushing image: $TAG"
-            docker push $ECR_URL:$TAG  # Push the image to AWS ECR
+            docker push $ECR_URL/<<pipeline.parameters.aws-ecr-repo>>:$TAG  # Push the image to AWS ECR
 
       - persist_to_workspace:
           root: /home/circleci/workspace
@@ -271,7 +271,7 @@ jobs:
           command: |
             FAMILY_NAME=<< pipeline.parameters.task-definition-family >>
             CONTAINER_NAME=<< pipeline.parameters.ecs-service-container-name >>
-            IMAGE_URL=$ECR_URL:${TAG}
+            IMAGE_URL=$ECR_URL/<<pipeline.parameters.aws-ecr-repo>>:${TAG}
 
             EXISTING=$(aws ecs describe-task-definition --task-definition $FAMILY_NAME 2>/dev/null || true)
 
