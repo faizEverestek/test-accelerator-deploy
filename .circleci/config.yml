@@ -309,27 +309,42 @@ jobs:
             CLUSTER_NAME=<< pipeline.parameters.ecs-cluster-name >>
             SERVICE_NAME=<< pipeline.parameters.ecs-service-name >>
             FAMILY_NAME=<< pipeline.parameters.task-definition-family >>
+            SG_NAME="${SERVICE_NAME}-sg"
+
             VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[0].VpcId" --output text)
 
-            echo "Creating security group to allow port 8080..."
-            SG_ID=$(aws ec2 create-security-group \
-              --group-name "${SERVICE_NAME}-sg" \
-              --description "Allow port 8080 access for ECS service" \
-              --vpc-id $VPC_ID \
-              --query "GroupId" \
-              --output text)
+            echo "Checking if security group '$SG_NAME' exists in VPC '$VPC_ID'..."
+            SG_ID=$(aws ec2 describe-security-groups \
+              --filters Name=group-name,Values=$SG_NAME Name=vpc-id,Values=$VPC_ID \
+              --query "SecurityGroups[0].GroupId" \
+              --output text 2>/dev/null)
 
-            aws ec2 authorize-security-group-ingress \
-              --group-id $SG_ID \
-              --protocol tcp \
-              --port 8080 \
-              --cidr 0.0.0.0/0
+            if [ "$SG_ID" == "None" ] || [ -z "$SG_ID" ]; then
+              echo "Security group not found. Creating it now..."
+              SG_ID=$(aws ec2 create-security-group \
+                --group-name "$SG_NAME" \
+                --description "Allow port 8080 access for ECS service" \
+                --vpc-id $VPC_ID \
+                --query "GroupId" \
+                --output text)
 
+              echo "Authorizing inbound access to port 8080..."
+              aws ec2 authorize-security-group-ingress \
+                --group-id $SG_ID \
+                --protocol tcp \
+                --port 8080 \
+                --cidr 0.0.0.0/0
+            else
+              echo "Security group '$SG_NAME' already exists with ID $SG_ID"
+            fi
+
+            echo "Finding default subnet for ECS networking..."
             SUBNET_ID=$(aws ec2 describe-subnets \
               --filters "Name=default-for-az,Values=true" \
               --query "Subnets[0].SubnetId" \
               --output text)
 
+            echo "Checking if ECS service '$SERVICE_NAME' already exists in cluster '$CLUSTER_NAME'..."
             SERVICE_EXISTS=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME 2>/dev/null || true)
 
             if echo "$SERVICE_EXISTS" | grep -q '"status": "ACTIVE"'; then
