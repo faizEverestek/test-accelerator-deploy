@@ -192,6 +192,15 @@ jobs:
                 --repository-name "$REPO_NAME" \
                 --image-scanning-configuration scanOnPush=true \
                 --region "$REGION"
+              echo "Waiting for ECR repo $REPO_NAME to become available..."
+              for i in {1..10}; do
+                if aws ecr describe-repositories --repository-names "$REPO_NAME" > /dev/null 2>&1; then
+                  echo "ECR repo $REPO_NAME is now available."
+                  break
+                fi
+                echo "Waiting... ($i/10)"
+                sleep 3
+              done
             else
               echo "ECR repo $REPO_NAME already exists."
             fi
