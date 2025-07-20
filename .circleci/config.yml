@@ -114,6 +114,11 @@ jobs:
             echo "///////"
             ls -lR
             echo "///////"
+            
+            # Extract microservice name and version from pom.xml
+            MICRO_SERVICE_NAME=$(grep -m1 '<name>' pom.xml | sed -E 's/.*<name>(.*)<\/name>.*/\1/')
+            
+            mkdir /opt/${MICRO_SERVICE_NAME}
       
             docker build \
             --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
@@ -176,6 +181,11 @@ jobs:
           command: |
             echo "Pushing image: $TAG"
             docker push $<<pipeline.parameters.account-url>>:$TAG  # Push the image to AWS ECR
+
+      - persist_to_workspace:
+          root: /home/circleci/workspace
+          paths:
+            - tag.txt  # Save the image tag information for the next job
   deploy:
     executor: java-executor
     working_directory: ~/workspace
@@ -229,7 +239,7 @@ jobs:
           family: << parameters.family >>
           cluster-name: << parameters.cluster-name >>
           service-name: << parameters.service-name >>
-          container-image-name-updates: << parameters.container-image-name-updates >>
+          container-image-name-updates: << parameters.container-image-name-updates >>,tag=${TAG}
 
 # Define the workflow
 workflows:
@@ -246,15 +256,15 @@ workflows:
           name: publish
           requires:
             - package  # Ensure the publishing job runs only after the package is complete
-#      - deploy:
-#          name: deploy
-#          requires:
-#            - publish
-#          family: accelerator-test-family-name
-#          cluster-name: test-accelerator-tool-cluster
-#          service-name: # CHANGE_ME - Name of the service.
-#          container-image-name-updates: # CHANGE_ME - Name of container and new tag
-#          filters:
-#            branches:
-#              only:
-#                - development # Add your branch name
+      - deploy:
+          name: deploy
+          requires:
+            - publish
+          family: family-3
+          cluster-name: cluster-3
+          service-name: service-3
+          container-image-name-updates: container=3
+          filters:
+            branches:
+              only:
+                - development # Add your branch name
