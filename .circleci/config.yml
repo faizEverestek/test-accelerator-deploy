@@ -175,7 +175,7 @@ jobs:
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
             
             # Build Docker image using parameters
-            docker build -f deployments/Dockerfile -t <<pipeline.parameters.repo>>:${TAG} <<pipeline.parameters.path>>
+            docker build -f deployments/Dockerfile -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
             
             # Save Docker image to a tar file
             docker save -o my-app.tar <<pipeline.parameters.aws-ecr-repo>>:${TAG}
