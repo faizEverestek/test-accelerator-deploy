@@ -414,10 +414,10 @@ workflows:
           name: publish
           requires:
             - package  # Ensure the publishing job runs only after the package is complete
-      - deploy:
-          name: deploy
-          requires:
-            - publish
+#      - deploy:
+#          name: deploy
+#          requires:
+#            - publish
 #          filters:
 #            branches:
 #              only:
