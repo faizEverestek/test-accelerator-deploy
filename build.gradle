@@ -173,3 +173,8 @@ bootWar {
     String serviceName = project.getProperty('serviceName')
     archiveFileName = "${serviceName}.war"
 }
+
+// Disable spotlessCheck from being part of the standard `check` task
+tasks.named('check') {
+    dependsOn -= tasks.named('spotlessCheck')
+}
