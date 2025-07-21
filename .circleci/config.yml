@@ -86,6 +86,9 @@ jobs:
             
             JAR_FILE_NAME="$SERVICE_NAME-$VERSION.war"
             echo "$JAR_FILE_NAME" > jar_file_name.txt
+            
+            JAR_FILE_PATH="target/$JAR_FILE_NAME"
+            echo "$JAR_FILE_PATH" > jar_file_path.txt
 
           # Store test coverage reports
       - store_artifacts:
@@ -109,7 +112,8 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/workspace
           paths:
-            - jar_file_name.txt  # Save the built JAR file for later jobs
+            - jar_file_name.txt
+            - jar_file_path.txt # Save the built JAR file for later jobs
 
   package:
     executor: java-executor
@@ -130,8 +134,9 @@ jobs:
             export JAR_FILE_NAME="$(cat /home/circleci/workspace/jar_file_name.txt)"  # Read the JAR_FILE_NAME from the file
             echo "JAR_FILE_NAME='${JAR_FILE_NAME}'"
             echo "export JAR_FILE_NAME='${JAR_FILE_NAME}'" >> $BASH_ENV  # Persist the JAR_FILE_NAME as an environment variable
-            
-            export JAR_FILE_PATH="target/${JAR_FILE_NAME}"  # Read the image tag from the file
+
+            export JAR_FILE_PATH="$(cat /home/circleci/workspace/jar_file_path.txt)"  # Read the JAR_FILE_PATH from the file
+            echo "JAR_FILE_PATH='${JAR_FILE_PATH}'"
             echo "export JAR_FILE_PATH='${JAR_FILE_PATH}'" >> $BASH_ENV  # Persist the JAR_FILE_PATH as an environment variable
 
       - run:
