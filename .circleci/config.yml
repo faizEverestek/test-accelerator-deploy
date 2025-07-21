@@ -152,7 +152,7 @@ jobs:
       - run:
           name: Copy WAR to Docker build context
           command: |
-            cp "/home/circleci/workspace/target/*.war" .
+            cp "${JAR_FILE_PATH}" .
 
       - run:
           name: Construct ECR Account URL
