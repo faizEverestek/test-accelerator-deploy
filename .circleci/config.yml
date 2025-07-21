@@ -86,9 +86,8 @@ jobs:
           name: Set WAR File Name and Path
           command: |
             
-            echo "////////////////"
-            ls -l
-            echo "////////////////"
+            cp -r target /home/circleci/workspace/target
+            
             VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
             SERVICE_NAME=$(./mvnw help:evaluate -Dexpression=project.name -q -DforceStdout)
       
@@ -120,7 +119,7 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/workspace
           paths:
-            - target
+            - target/*
             - jar_file_name.txt
             - jar_file_path.txt # Save the built JAR file for later jobs
 
@@ -140,6 +139,8 @@ jobs:
           name: Export Metadata
           command: |
             ls
+            
+            ls -l /home/circleci/workspace/target
             export JAR_FILE_NAME="$(cat /home/circleci/workspace/jar_file_name.txt)"  # Read the JAR_FILE_NAME from the file
             echo "JAR_FILE_NAME='${JAR_FILE_NAME}'"
             echo "export JAR_FILE_NAME='${JAR_FILE_NAME}'" >> $BASH_ENV  # Persist the JAR_FILE_NAME as an environment variable
@@ -151,7 +152,7 @@ jobs:
       - run:
           name: Copy WAR to Docker build context
           command: |
-            cp "/home/circleci/workspace/${JAR_FILE_PATH}" .
+            cp "*/*.war" .
 
       - run:
           name: Construct ECR Account URL
