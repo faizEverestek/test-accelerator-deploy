@@ -173,13 +173,9 @@ jobs:
           command: |
             export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
             export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
-            export WAR_BASENAME=$(basename ${JAR_FILE_PATH})
             
             # Build Docker image using parameters
-            docker build \
-              --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
-              --build-arg JAR_FILE_NAME=${JAR_FILE_NAME} \
-              -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
+            docker build -f deployments/Dockerfile -t <<pipeline.parameters.repo>>:${TAG} <<pipeline.parameters.path>>
             
             # Save Docker image to a tar file
             docker save -o my-app.tar <<pipeline.parameters.aws-ecr-repo>>:${TAG}
