@@ -86,7 +86,7 @@ jobs:
           name: Set WAR File Name and Path
           command: |
             
-            cp -r target/*.war /home/circleci/workspace/target/
+            cp -r target /home/circleci/workspace/target
             
             VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
             SERVICE_NAME=$(./mvnw help:evaluate -Dexpression=project.name -q -DforceStdout)
