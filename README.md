@@ -1,76 +1,210 @@
-# Project README
+# 🐍 Python Microservice Boilerplate
 
-## Requirements
+> A fast, lightweight, and modern Python microservice built with FastAPI, Poetry, and Uvicorn, ideal for scalable RESTful services.
 
-Ensure that you are using the same Python version specified in the `pyproject.toml` file for compatibility.
+---
 
-## Installation & Usage
+## 📌 Index
 
-### 1. Set up a Virtual Environment
+* [Prerequisites](#prerequisites)
+* [Environment Setup](#environment-setup)
+* [Run the Application](#run-the-application)
+* [Run with Docker](#run-with-docker)
+* [Run Tests](#run-tests)
+* [Push Project to GitHub](#push-project-to-github)
+* [Integrate with CircleCI](#integrate-with-circleci)
 
-- First, create a virtual environment.
-    ```bash
-    python -m venv .venv
-    ```
+  * [1. Add Project to CircleCI](#1-add-project-to-circleci)
+  * [2. Configure Environment Variables](#2-configure-environment-variables)
+  * [3. Update CircleCI Config](#3-update-circleci-config)
+  * [4. Commit & Trigger Build](#4-commit--trigger-build)
+  * [5. Verify Build Status](#5-verify-build-status)
+  * [6. View Build Artifacts](#6-view-build-artifacts)
+* [Verify ECS Deployment](#verify-ecs-deployment)
 
-### 2. Activate the Virtual Environment
+---
 
-- After creating the virtual environment, activate it. The method to activate depends on your operating system:
+## ✅ Prerequisites
 
-  - **On Windows:**
-    ```bash
-    .\.venv\Scripts\activate
-    ```
-  - **On macOS/Linux:**
-    ```bash
-    source .venv/bin/activate
-    ```
+Ensure your system has the following installed:
 
-### 3. Install Poetry
+1. **Python** (version as defined in `pyproject.toml`)
+2. **Poetry** (for dependency management)
 
-- Install Poetry, which will be used to manage dependencies.
-  ```bash
-  pip install poetry
-  ```
+---
 
-### 4. Install Project Dependencies
+## ⚙️ Environment Setup
 
-- Use Poetry to install all necessary dependencies for the project.
+### 1. Create a Virtual Environment:
 
-  ```bash
-  poetry install --no-root
-  ```
+```bash
+python -m venv .venv
+```
 
-### 5. Run the Project
+### 2. Activate Virtual Environment:
 
-- Once the dependencies are installed, start the server with the following command:
+* **Windows:**
 
-  ```bash
-  PYTHONPATH=src uvicorn main:app --host 0.0.0.0 --port 8080
-  ```
-- Open your browser and go to http://localhost:8080/docs/ to view the API documentation.
+```bash
+.\.venv\Scripts\activate
+```
 
+* **macOS/Linux:**
 
-## Running with Docker
+```bash
+source .venv/bin/activate
+```
 
-- To run the server inside a Docker container, follow these steps.
-- From the root directory, execute following command tio build docker image:
+### 3. Install Poetry:
 
-  ```bash
-  docker build -f deployments/Dockerfile -t <image:tag_name> .
-  ```
-- After building the image, run the container:
+```bash
+pip install poetry
+```
 
-  ```bash
-  docker run -p 9001:9001 <image:tag_name>
-  ```
+### 4. Install Dependencies:
 
-- The server will now be accessible at http://localhost:9001.
+```bash
+poetry install --no-root
+```
 
-## Tests
+---
 
-- Ensure that your virtual environment is activated.
-- From the root directory of the project, run the following command to execute the test cases:
-  ```bash
-  PYTHONPATH=./:src pytest
-  ```
+## 🚀 Run the Application
+
+Start the server with:
+
+```bash
+PYTHONPATH=src uvicorn main:app --host 0.0.0.0 --port 8080
+```
+
+Access API documentation:
+
+* [http://localhost:8080/docs](http://localhost:8080/docs)
+
+---
+
+## 🐳 Run with Docker
+
+### 1. Build the Docker Image:
+
+```bash
+docker build -f deployments/Dockerfile -t <image:tag_name> .
+```
+
+### 2. Run the Container:
+
+```bash
+docker run -p 9001:9001 <image:tag_name>
+```
+
+The server will now be accessible at:
+
+* [http://localhost:9001](http://localhost:9001)
+
+---
+
+## 🧪 Run Tests
+
+```bash
+PYTHONPATH=./:src pytest
+```
+
+Make sure the virtual environment is activated before running tests.
+
+---
+
+## 🗂️ Push Project to GitHub
+
+### 1. Create a GitHub Repository
+
+* Go to [https://github.com](https://github.com) and create a new repository.
+
+### 2. Clone the Repository Locally
+
+```bash
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+```
+
+### 3. Copy Project Files into the Repo
+
+```bash
+cp -r /path/to/your/project/* .
+```
+
+### 4. Initial Commit
+
+```bash
+git add .
+git commit -m "initial commit"
+```
+
+### 5. Push to GitHub
+
+```bash
+git push origin main
+```
+
+---
+
+## ♻️ Integrate with CircleCI
+
+### 1. Add Project to CircleCI
+
+1. Visit [https://circleci.com](https://circleci.com)
+2. Log in with GitHub
+3. Click **"Add Project"**
+4. Find your repository and click **"Set Up Project"**
+5. Choose `.circleci/config.yml` as the configuration path
+
+### 2. Configure Environment Variables
+
+* Navigate to **Project Settings > Environment Variables** in CircleCI
+* Add the following:
+
+  * `AWS_ACCESS_KEY_ID`
+  * `AWS_SECRET_ACCESS_KEY`
+  * `AWS_DEFAULT_REGION` (e.g., `ap-south-1`)
+  * `AWS_ACCOUNT_ID`
+
+### 3. Update CircleCI Config
+
+Ensure `.circleci/config.yml` is updated with actual values replacing placeholders like `CHANGE_ME`.
+
+### 4. Commit & Trigger Build
+
+```bash
+git add .circleci/config.yml
+git commit -m "Add CircleCI pipeline for Python service"
+git push origin <branch_name>
+```
+
+### 5. Verify Build Status
+
+* Open CircleCI Dashboard
+* Select your project
+* View logs of each job (install, test, build, deploy)
+
+### 6. View Build Artifacts
+
+* In the CircleCI job screen, go to **Artifacts** tab
+* Check uploaded test reports or deployment logs
+
+---
+
+## 🔍 Verify ECS Deployment
+
+1. Open **AWS Console** and go to **ECS**
+2. Navigate to the **Cluster** used for deployment
+3. In the **Services** tab, find your service
+4. Open the running **Task**, scroll to **Network** section
+5. Copy the **Public IP** under ENI
+6. Access the running service at:
+
+```http
+http://<PUBLIC_IP>:9001/docs
+```
+
+If all goes well, the FastAPI Swagger UI will appear live from ECS! 🎉
+
+---
