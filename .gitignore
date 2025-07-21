@@ -1,0 +1,25 @@
+/target/
+build/
+.gradle/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Logs and temp files
+logs/
+*.log
+*.tmp
+*.bak
+/.openapi-generator-ignore
+/.openapi-generator/
