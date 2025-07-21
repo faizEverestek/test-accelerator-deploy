@@ -85,6 +85,10 @@ jobs:
       - run:
           name: Set WAR File Name and Path
           command: |
+            
+            echo "////////////////"
+            ls -l
+            echo "////////////////"
             VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
             SERVICE_NAME=$(./mvnw help:evaluate -Dexpression=project.name -q -DforceStdout)
       
