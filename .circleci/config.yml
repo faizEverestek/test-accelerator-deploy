@@ -89,10 +89,10 @@ jobs:
             SERVICE_NAME=$(./mvnw help:evaluate -Dexpression=project.name -q -DforceStdout)
       
             JAR_FILE_NAME="${SERVICE_NAME}-${VERSION}.war"
-            echo "$JAR_FILE_NAME" > jar_file_name.txt
+            echo "$JAR_FILE_NAME" > /home/circleci/workspace/jar_file_name.txt
       
             JAR_FILE_PATH="target/$JAR_FILE_NAME"
-            echo "$JAR_FILE_PATH" > jar_file_path.txt
+            echo "$JAR_FILE_PATH" > /home/circleci/workspace/jar_file_path.txt
 
           # Store test coverage reports
       - store_artifacts:
