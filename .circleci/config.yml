@@ -67,6 +67,9 @@ jobs:
     steps:
       - checkout  # Checkout the source code from the repository
 
+      - attach_workspace:
+          at: /home/circleci/workspace  # Attach the workspace from the build job
+
       - run:
           name: Set Execute Permission for Maven Wrapper
           command: chmod +x ./mvnw  # Ensure Maven wrapper script is executable
@@ -77,16 +80,17 @@ jobs:
 
       - run:
           name: Build and Test
+          command: ./mvnw clean install # Build, run tests, and generate test coverage reports
+
+      - run:
+          name: Set WAR File Name and Path
           command: |
-            ./mvnw clean install # Build, run tests, and generate test coverage reports
-            
-            # Create Jar file name using microservice name and version
             VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
             SERVICE_NAME=$(./mvnw help:evaluate -Dexpression=project.name -q -DforceStdout)
-            
-            JAR_FILE_NAME="$SERVICE_NAME-$VERSION.war"
+      
+            JAR_FILE_NAME="${SERVICE_NAME}-${VERSION}.war"
             echo "$JAR_FILE_NAME" > jar_file_name.txt
-            
+      
             JAR_FILE_PATH="target/$JAR_FILE_NAME"
             echo "$JAR_FILE_PATH" > jar_file_path.txt
 
