@@ -15,10 +15,6 @@ parameters:
     default: repo-8
     description: Name of the Amazon ECR repository, where the docker image with be pushed after successful build.
     type: string
-  docker-image-version:
-    default: 1.0.0
-    description: Latest version of the Docker image that will be used in the image tag.
-    type: string
   task-definition-family:
     default: family-8
     description: Name of the ECS task definition family.
@@ -162,7 +158,8 @@ jobs:
           name: Build and save Docker Image
           command: |
             export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
-            export TAG=<<pipeline.parameters.docker-image-version>>-${TIMESTAMP}_SNAPSHOT
+            DOCKER_IMAGE_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+            export TAG=${DOCKER_IMAGE_VERSION}-${TIMESTAMP}_SNAPSHOT
             export WAR_BASENAME=$(basename ${JAR_FILE_PATH})
             
             # Build Docker image using parameters

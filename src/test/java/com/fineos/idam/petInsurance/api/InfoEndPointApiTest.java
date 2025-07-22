@@ -8,23 +8,30 @@ ALL RIGHTS RESERVED
 package com.fineos.idam.petInsurance.api;
 
 import jakarta.servlet.ServletContext;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.nio.charset.StandardCharsets;
 import org.mockito.Mockito;
 import org.springframework.boot.actuate.info.Info;
 
-/** Unit test class for {@link InfoEndPointApi}. */
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+/**
+ * Unit test class for {@link InfoEndPointApi}.
+ */
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 class InfoEndPointApiTest {
 
-    /** Mock ServletContext used to simulate application context in tests. */
+    /**
+     * Mock ServletContext used to simulate application context in tests.
+     */
     private ServletContext servletContext;
 
-    /** Instance of InfoEndPointApi under test. */
+    /**
+     * Instance of InfoEndPointApi under test.
+     */
     private InfoEndPointApi infoEndPointApi;
 
     /**
@@ -45,12 +52,9 @@ class InfoEndPointApiTest {
      */
     @Test
     void testContributeSuccess() throws Exception {
-        String manifestContent = """
-                Manifest-Version: 1.0
-                Implementation-Version: 1.2.3
-                Implementation-Title: petInsurance
-                
-                """;
+        String manifestContent = "Manifest-Version: 1.0\n"
+                + "Implementation-Version: 1.2.3\n"
+                + "Implementation-Title: petInsurance\n\n";
 
         InputStream manifestStream = new ByteArrayInputStream(manifestContent.getBytes(StandardCharsets.UTF_8));
 
@@ -62,26 +66,24 @@ class InfoEndPointApiTest {
 
         Assertions.assertEquals("1.2.3", info.get("version"), "Expected version does not match.");
         Assertions.assertEquals("petInsurance", info.get("serviceName"), "Expected service name does not match.");
-        Assertions.assertEquals(
-                "The petInsurance micro-service for FINEOS.",
-                info.get("description"),
-                "Expected description does not match.");
+        Assertions.assertEquals("The petInsurance micro-service for FINEOS.",
+                info.get("description"), "Expected description does not match.");
     }
 
-    /** Tests that an {@code IllegalStateException} is thrown when the MANIFEST file is missing. */
+    /**
+     * Tests that an {@code IllegalStateException} is thrown when the MANIFEST file is missing.
+     */
     @Test
     void testContributeMissingManifest() {
         Mockito.when(servletContext.getResourceAsStream("META-INF/MANIFEST.MF")).thenReturn(null);
 
         Info.Builder builder = new Info.Builder();
-        IllegalStateException exception = Assertions.assertThrows(
-                IllegalStateException.class,
-                () -> infoEndPointApi.contribute(builder),
-                "Expected IllegalStateException when MANIFEST.MF is missing");
+        IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class, () ->
+                infoEndPointApi.contribute(builder),
+                "Expected IllegalStateException when MANIFEST.MF is missing"
+        );
 
-        Assertions.assertEquals(
-                "MANIFEST.MF is missing in the war",
-                exception.getMessage(),
+        Assertions.assertEquals("MANIFEST.MF is missing in the war", exception.getMessage(),
                 "Exception message did not match the expected value.");
     }
 }

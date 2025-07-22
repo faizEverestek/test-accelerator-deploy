@@ -4,15 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Assertions;
+import java.lang.reflect.Constructor;
 
 /**
- * Utility class for performing assertions on Data Transfer Objects (DTOs). Includes methods for verifying getter/setter
- * correctness, validating hashCode and equals implementations, and generating JSON representations of objects.
+ * Utility class for performing assertions on Data Transfer Objects (DTOs).
+ * Includes methods for verifying getter/setter correctness,
+ * validating hashCode and equals implementations,
+ * and generating JSON representations of objects.
  *
  * @param <T> the type of the object being validated
  */
@@ -20,8 +22,8 @@ import org.junit.jupiter.api.Assertions;
 public final class AssertionUtilDto<T> {
 
     /**
-     * An {@link ObjectMapper} instance for serializing and deserializing objects to and from JSON. Configured with the
-     * JavaTime module and a specific date format.
+     * An {@link ObjectMapper} instance for serializing and deserializing objects to and from JSON.
+     * Configured with the JavaTime module and a specific date format.
      */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -38,12 +40,13 @@ public final class AssertionUtilDto<T> {
     }
 
     /**
-     * Asserts that two objects are equal by comparing their JSON representations. If the objects are instances of
-     * {@link OffsetDateTime}, the comparison is done by comparing their {@link java.time.Instant} values.
+     * Asserts that two objects are equal by comparing their JSON representations.
+     * If the objects are instances of {@link OffsetDateTime}, the comparison is done
+     * by comparing their {@link java.time.Instant} values.
      *
-     * @param actual the actual object to be validated
+     * @param actual   the actual object to be validated
      * @param expected the expected object to be compared with
-     * @param <T> the type of the objects being compared
+     * @param <T>      the type of the objects being compared
      */
     public static <T> void verifySetterGetters(T actual, T expected) {
         try {
@@ -66,13 +69,13 @@ public final class AssertionUtilDto<T> {
     }
 
     /**
-     * Verifies the correctness of equals() and hashCode() implementations for the given objects. Performs checks for
-     * equality and inequality between objects of the same type, non-null constraints, and field-by-field equality using
-     * reflection.
+     * Verifies the correctness of equals() and hashCode() implementations for the given objects.
+     * Performs checks for equality and inequality between objects of the same type,
+     * non-null constraints, and field-by-field equality using reflection.
      *
-     * @param o1 the first object to be tested
-     * @param o2 the second object, which should be equal to o1
-     * @param o3 the third object, which should not be equal to o1
+     * @param o1  the first object to be tested
+     * @param o2  the second object, which should be equal to o1
+     * @param o3  the third object, which should not be equal to o1
      * @param <T> the type of the objects being validated
      */
     public static <T> void verifyHashAndEquals(T o1, T o2, T o3) {
@@ -139,7 +142,7 @@ public final class AssertionUtilDto<T> {
     /**
      * Generates the JSON representation of the given object using {@link ObjectMapper}.
      *
-     * @param o the object to be serialized to JSON
+     * @param o   the object to be serialized to JSON
      * @param <T> the type of the object
      * @return the JSON string representation of the object
      * @throws JsonProcessingException if there is an error during JSON serialization
@@ -149,9 +152,10 @@ public final class AssertionUtilDto<T> {
     }
 
     /**
-     * Generates a string representation of an object by retrieving its field values using reflection.
+     * Generates a string representation of an object by retrieving its field values
+     * using reflection.
      *
-     * <p>Format: ClassName(field1=value1, field2=value2, ...)
+     * <p>Format: ClassName(field1=value1, field2=value2, ...)</p>
      *
      * @param <T> The type of the object.
      * @param obj The object to be converted to string representation.
@@ -176,8 +180,7 @@ public final class AssertionUtilDto<T> {
                 }
             }
 
-            // If no all-args constructor is found, fallback to the default toString()
-            // method
+            // If no all-args constructor is found, fallback to the default toString() method
             if (allArgsConstructor == null) {
                 return obj.toString();
             }
@@ -200,4 +203,5 @@ public final class AssertionUtilDto<T> {
         sb.append(')');
         return sb.toString();
     }
+
 }

@@ -9,8 +9,10 @@ package com.fineos.idam.petInsurance.razorpay.configuration;
 
 import org.springframework.context.annotation.Configuration;
 
+
 @Configuration
 public class ClientConfiguration {
-    // ClientConfiguration
+// ClientConfiguration
+
 
 }

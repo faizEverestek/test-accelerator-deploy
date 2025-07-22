@@ -5,9 +5,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -48,28 +48,26 @@ class RequestResponseLoggingFilterTest {
         filterChain = Mockito.mock(FilterChain.class);
     }
 
-    /** Tests that correlation headers are correctly set in the response when they are missing from the request. */
+    /**
+     * Tests that correlation headers are correctly set in the response when they are missing from the request.
+     */
     @Test
     void testHeadersAreSetWhenMissing() throws ServletException, IOException {
         filter.doFilterInternal(request, response, filterChain);
 
-        Assertions.assertNotNull(
-                response.getHeader(RequestResponseLoggingFilter.X_CORRELATION_ID),
+        Assertions.assertNotNull(response.getHeader(RequestResponseLoggingFilter.X_CORRELATION_ID),
                 "Correlation ID header should not be null");
-        Assertions.assertEquals(
-                RequestResponseLoggingFilter.UNKNOWN,
-                response.getHeader(RequestResponseLoggingFilter.X_CLIENT_ID),
+        Assertions.assertEquals(RequestResponseLoggingFilter.UNKNOWN, response.getHeader(RequestResponseLoggingFilter.X_CLIENT_ID),
                 "Client ID header should be set to UNKNOWN if missing");
-        Assertions.assertEquals(
-                RequestResponseLoggingFilter.UNKNOWN,
-                response.getHeader(RequestResponseLoggingFilter.X_CLIENT_VERSION),
+        Assertions.assertEquals(RequestResponseLoggingFilter.UNKNOWN, response.getHeader(RequestResponseLoggingFilter.X_CLIENT_VERSION),
                 "Client Version header should be set to UNKNOWN if missing");
 
-        Mockito.verify(filterChain)
-                .doFilter(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
+        Mockito.verify(filterChain).doFilter(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
     }
 
-    /** Tests that correlation headers from the request are passed through to the response. */
+    /**
+     * Tests that correlation headers from the request are passed through to the response.
+     */
     @Test
     void testHeadersAreRetainedWhenPresent() throws ServletException, IOException {
         request.addHeader(RequestResponseLoggingFilter.X_CORRELATION_ID, "12345");
@@ -78,21 +76,14 @@ class RequestResponseLoggingFilterTest {
 
         filter.doFilterInternal(request, response, filterChain);
 
-        Assertions.assertEquals(
-                "12345",
-                response.getHeader(RequestResponseLoggingFilter.X_CORRELATION_ID),
+        Assertions.assertEquals("12345", response.getHeader(RequestResponseLoggingFilter.X_CORRELATION_ID),
                 "Expected correlation ID header does not match");
-        Assertions.assertEquals(
-                "TestClient",
-                response.getHeader(RequestResponseLoggingFilter.X_CLIENT_ID),
+        Assertions.assertEquals("TestClient", response.getHeader(RequestResponseLoggingFilter.X_CLIENT_ID),
                 "Expected client ID header does not match");
-        Assertions.assertEquals(
-                "1.0.0",
-                response.getHeader(RequestResponseLoggingFilter.X_CLIENT_VERSION),
+        Assertions.assertEquals("1.0.0", response.getHeader(RequestResponseLoggingFilter.X_CLIENT_VERSION),
                 "Expected client version header does not match");
 
-        Mockito.verify(filterChain)
-                .doFilter(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
+        Mockito.verify(filterChain).doFilter(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
     }
 
     /**
@@ -105,11 +96,12 @@ class RequestResponseLoggingFilterTest {
 
         filter.doFilterInternal(request, response, filterChain);
 
-        Mockito.verify(filterChain)
-                .doFilter(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
+        Mockito.verify(filterChain).doFilter(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
     }
 
-    /** Tests that request and response bodies are logged when logging is enabled. */
+    /**
+     * Tests that request and response bodies are logged when logging is enabled.
+     */
     @Test
     void testLoggingCapturesRequestAndResponseBody() throws ServletException, IOException {
         ReflectionTestUtils.setField(filter, "loggingEnabled", true);
@@ -126,9 +118,6 @@ class RequestResponseLoggingFilterTest {
 
         responseWrapper.copyBodyToResponse();
 
-        Mockito.verify(mockChain)
-                .doFilter(
-                        Mockito.any(ContentCachingRequestWrapper.class),
-                        Mockito.any(ContentCachingResponseWrapper.class));
+        Mockito.verify(mockChain).doFilter(Mockito.any(ContentCachingRequestWrapper.class), Mockito.any(ContentCachingResponseWrapper.class));
     }
 }

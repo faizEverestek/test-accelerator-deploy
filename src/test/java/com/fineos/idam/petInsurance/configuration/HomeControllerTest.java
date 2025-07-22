@@ -20,20 +20,23 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 /**
  * Unit test class for {@link HomeController}.
  *
- * <p>This class tests the redirection behavior of the {@code HomeController}. It verifies that requests to the root URL
- * ("/") are correctly redirected to the Swagger UI documentation page.
+ * <p>This class tests the redirection behavior of the {@code HomeController}.
+ * It verifies that requests to the root URL ("/") are correctly redirected
+ * to the Swagger UI documentation page.</p>
  */
 @SuppressWarnings({"PMD.JUnitTestsShouldIncludeAssert", "PMD.LawOfDemeter", "PMD.JUnitTestContainsTooManyAsserts"})
 class HomeControllerTest {
 
-    /** MockMvc instance used to simulate HTTP requests and verify responses. */
+    /**
+     * MockMvc instance used to simulate HTTP requests and verify responses.
+     */
     private MockMvc mockMvc;
 
     /**
      * Sets up the test environment before each test case.
      *
-     * <p>Initializes {@code MockMvc} with an instance of {@code HomeController} to enable unit testing of controller
-     * methods without starting a full Spring application.
+     * <p>Initializes {@code MockMvc} with an instance of {@code HomeController}
+     * to enable unit testing of controller methods without starting a full Spring application.</p>
      */
     @BeforeEach
     void setUp() {
@@ -43,8 +46,8 @@ class HomeControllerTest {
     /**
      * Tests the redirection behavior of the {@code index} method in {@link HomeController}.
      *
-     * <p>Ensures that a GET request to the root URL ("/") results in an HTTP 302 redirect to the Swagger UI
-     * documentation page ("swagger-ui.html").
+     * <p>Ensures that a GET request to the root URL ("/") results in an HTTP 302 redirect
+     * to the Swagger UI documentation page ("swagger-ui.html").</p>
      *
      * @throws Exception if an error occurs during the request execution.
      */
@@ -59,11 +62,12 @@ class HomeControllerTest {
         ////////////////////////////////////////////////////////////////////////
         // 2. Call method that needs to be tested
         ////////////////////////////////////////////////////////////////////////
-        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.get("/"))
-                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl(expectedRedirectUrl))
-                .andReturn()
-                .getResponse();
+        MockHttpServletResponse response = mockMvc
+            .perform(MockMvcRequestBuilders.get("/"))
+            .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+            .andExpect(MockMvcResultMatchers.redirectedUrl(expectedRedirectUrl))
+            .andReturn()
+            .getResponse();
 
         ////////////////////////////////////////////////////////////////////////
         // 3. Verify result of the method to be tested

@@ -190,16 +190,38 @@ git push origin <branch_name>
 
 ## 🔍 Verify ECS Deployment
 
-1. **Login to AWS Console** and go to the **ECS** section
-2. Select the **Cluster** you created or updated
-3. Go to the **Services** tab and find the most recent service created
-4. Click the **Task** under the running service
-5. Scroll to **Network** section and find the **Public IP** under ENI (Elastic Network Interface)
-6. Access the deployed app via:
+After your service is deployed to ECS, follow the steps below to verify the deployment using the provided endpoints.
 
-```http
-http://<PUBLIC_IP>:8080/swagger-ui/index.html
-```
+### ✅ Steps to Follow:
+
+1. Log in to the **[AWS ECS Console](https://console.aws.amazon.com/ecs/)**.
+2. Navigate to your ECS **Service** and find the **Application Load Balancer (ALB) DNS name**.
+3. Replace `<ALB_DNS_NAME>` and `<service_name>` in the URLs below to access your deployed endpoints.
+
+---
+
+### 🔗 **Verification Endpoints**
+
+* **Service Info**
+  Displays basic information about the deployed application:
+
+  ```
+  https://<ALB_DNS_NAME>/<service_name>/info
+  ```
+
+* **Health Check**
+  Useful to confirm that the application is up and running:
+
+  ```
+  https://<ALB_DNS_NAME>/<service_name>/swagger-ui/health
+  ```
+
+* **Swagger UI**
+  Access the interactive API documentation here:
+
+  ```
+  https://<ALB_DNS_NAME>/<service_name>/swagger-ui/index.html
+  ```
 
 If everything is successful, you should see the **Swagger UI** live from your ECS deployment! 🎉
 
