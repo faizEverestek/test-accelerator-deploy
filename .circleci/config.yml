@@ -87,6 +87,8 @@ jobs:
             
             JAR_FILE_PATH="target/$JAR_FILE_NAME"
             echo "$JAR_FILE_PATH" > /home/circleci/workspace/jar_file_path.txt
+            
+            echo "$VERSION" > docker_image_version.txt
 
           # Store test coverage reports
       - store_artifacts:
@@ -113,6 +115,7 @@ jobs:
             - target/*.war # Save the built WAR file for later jobs
             - jar_file_name.txt # Save the JAR file name for later jobs
             - jar_file_path.txt # Save the built JAR file for later jobs
+            - docker_image_version.txt # Save the Docker image version for later jobs
 
   package:
     executor: java-executor
@@ -140,6 +143,10 @@ jobs:
             echo "JAR_FILE_PATH='${JAR_FILE_PATH}'"
             echo "export JAR_FILE_PATH='${JAR_FILE_PATH}'" >> $BASH_ENV  # Persist the JAR_FILE_PATH as an environment variable
 
+            export DOCKER_IMAGE_VERSION="$(cat /home/circleci/workspace/docker_image_version.txt)"  # Read the Docker image version from the file
+            echo "DOCKER_IMAGE_VERSION='${DOCKER_IMAGE_VERSION}'"
+            echo "export DOCKER_IMAGE_VERSION='${DOCKER_IMAGE_VERSION}'" >> $BASH_ENV  # Persist the DOCKER_IMAGE_VERSION as an environment variable
+
       - run:
           name: Copy WAR to Docker build context
           command: |
@@ -158,7 +165,6 @@ jobs:
           name: Build and save Docker Image
           command: |
             export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
-            DOCKER_IMAGE_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
             export TAG=${DOCKER_IMAGE_VERSION}-${TIMESTAMP}_SNAPSHOT
             export WAR_BASENAME=$(basename ${JAR_FILE_PATH})
             
