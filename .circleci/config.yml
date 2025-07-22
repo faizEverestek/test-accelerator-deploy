@@ -1,0 +1,296 @@
+version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
+  aws-ecs: circleci/aws-ecs@0.0.8
+
+# Define the executors
+executors:
+  java-executor:
+    docker:
+      - image: cimg/openjdk:21.0.2  # Use OpenJDK 21 Docker image for Java-based builds
+
+# Define pipeline parameters, change default values accordingly.
+parameters:
+  aws-ecr-repo:
+    default: repo-8
+    description: Name of the Amazon ECR repository, where the docker image with be pushed after successful build.
+    type: string
+  task-definition-family:
+    default: family-8
+    description: Name of the ECS task definition family.
+    type: string
+  ecs-cluster-name:
+    default: cluster-8
+    description: Name or ARN of the ECS cluster hosting the service.
+    type: string
+  ecs-service-name:
+    default: service-8
+    description: Name of the ECS service to update.
+    type: string
+  ecs-service-container-name:
+    default: container-8
+    description: Name of the container within the task definition.
+    type: string
+  aws-access-key-id:
+    default: AWS_ACCESS_KEY_ID
+    description: The access key id of the AWS account, passed as ENV variable.
+    type: string
+  aws-secret-access-key:
+    default: AWS_SECRET_ACCESS_KEY
+    description: The secret access key id of the AWS account, passed as ENV variable.
+    type: string
+  region:
+    default: AWS_DEFAULT_REGION
+    description: The default region of the AWS account, passed as ENV variable.
+    type: string
+  aws-account-id:
+    default: AWS_ACCOUNT_ID
+    description: AWS account ID of the account which is used for deployment.
+    type: string
+
+# Define jobs
+jobs:
+  build:
+    executor: java-executor
+    steps:
+      - checkout  # Checkout the source code from the repository
+
+      - attach_workspace:
+          at: /home/circleci/workspace  # Attach the workspace from the build job
+
+      - run:
+          name: Set Execute Permission for Maven Wrapper
+          command: chmod +x ./mvnw  # Ensure Maven wrapper script is executable
+
+      - run:
+          name: Resolve dependencies
+          command: ./mvnw dependency:resolve  # Download and cache project dependencies
+
+      - run:
+          name: Build and Test
+          command: ./mvnw clean install # Build, run tests, and generate test coverage reports
+
+      - run:
+          name: Set WAR File Name and Path
+          command: |
+            
+            # Copy the taget directory to the workspace
+            cp -r target /home/circleci/workspace/target
+            
+            # Extract the version and service name from the Maven project
+            VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+            SERVICE_NAME=$(./mvnw help:evaluate -Dexpression=project.name -q -DforceStdout)
+            
+            # Construct the JAR file name and path
+            JAR_FILE_NAME="${SERVICE_NAME}-${VERSION}.war"
+            echo "$JAR_FILE_NAME" > /home/circleci/workspace/jar_file_name.txt
+            
+            JAR_FILE_PATH="target/$JAR_FILE_NAME"
+            echo "$JAR_FILE_PATH" > /home/circleci/workspace/jar_file_path.txt
+            
+            echo "$VERSION" > /home/circleci/workspace/docker_image_version.txt
+
+          # Store test coverage reports
+      - store_artifacts:
+          path: target/site/jacoco
+          destination: jacoco-test-reports/
+
+      # Store static analysis reports
+      - store_artifacts:
+          path: target/checkstyle-result.xml
+          destination: quality-checks/checkstyle
+      - store_artifacts:
+          path: target/pmd.xml
+          destination: quality-checks/pmd
+      - store_artifacts:
+          path: target/cpd.xml
+          destination: quality-checks/cpd
+      - store_artifacts:
+          path: target/spotbugs.html
+          destination: quality-checks/spotbugs
+
+      - persist_to_workspace:
+          root: /home/circleci/workspace
+          paths:
+            - target/*.war # Save the built WAR file for later jobs
+            - jar_file_name.txt # Save the JAR file name for later jobs
+            - jar_file_path.txt # Save the built JAR file for later jobs
+            - docker_image_version.txt # Save the Docker image version for later jobs
+
+  package:
+    executor: java-executor
+    working_directory: ~/workspace  # Define working directory for this job
+
+    steps:
+      - checkout  # Checkout the source code
+
+      - attach_workspace:
+          at: /home/circleci/workspace  # Attach the workspace from the build job
+
+      - setup_remote_docker  # Enable remote Docker support
+
+      - run:
+          name: Export Metadata
+          command: |
+            ls
+
+            # Read the JAR file name and path from the files created in the build job
+            export JAR_FILE_NAME="$(cat /home/circleci/workspace/jar_file_name.txt)"  # Read the JAR_FILE_NAME from the file
+            echo "JAR_FILE_NAME='${JAR_FILE_NAME}'"
+            echo "export JAR_FILE_NAME='${JAR_FILE_NAME}'" >> $BASH_ENV  # Persist the JAR_FILE_NAME as an environment variable
+
+            export JAR_FILE_PATH="$(cat /home/circleci/workspace/jar_file_path.txt)"  # Read the JAR_FILE_PATH from the file
+            echo "JAR_FILE_PATH='${JAR_FILE_PATH}'"
+            echo "export JAR_FILE_PATH='${JAR_FILE_PATH}'" >> $BASH_ENV  # Persist the JAR_FILE_PATH as an environment variable
+
+            export DOCKER_IMAGE_VERSION="$(cat /home/circleci/workspace/docker_image_version.txt)"  # Read the Docker image version from the file
+            echo "DOCKER_IMAGE_VERSION='${DOCKER_IMAGE_VERSION}'"
+            echo "export DOCKER_IMAGE_VERSION='${DOCKER_IMAGE_VERSION}'" >> $BASH_ENV  # Persist the DOCKER_IMAGE_VERSION as an environment variable
+
+      - run:
+          name: Copy WAR to Docker build context
+          command: |
+            cp "${JAR_FILE_PATH}" . # Copy the WAR file to the current directory for Docker build context
+
+      - run:
+          name: Construct ECR Account URL
+          command: |
+            export ECR_URL="$<<pipeline.parameters.aws-account-id>>.dkr.ecr.$<<pipeline.parameters.region>>.amazonaws.com"
+            echo "ECR_URL=$ECR_URL"
+            echo "export ECR_URL=$ECR_URL" >> $BASH_ENV
+            # Save the ECR_URL for the publish job
+            echo $ECR_URL > ecr_url.txt 
+
+      - run:
+          name: Build and save Docker Image
+          command: |
+            export TIMESTAMP=$(date +"%Y%m%d%H%M%S")  # Generate a timestamp for the Docker image tag
+            export TAG=${DOCKER_IMAGE_VERSION}-${TIMESTAMP}_SNAPSHOT
+            export WAR_BASENAME=$(basename ${JAR_FILE_PATH})
+            
+            # Build Docker image using parameters
+            docker build \
+              --build-arg JAR_FILE_PATH=${WAR_BASENAME} \
+              --build-arg JAR_FILE_NAME=${JAR_FILE_NAME} \
+              -t <<pipeline.parameters.aws-ecr-repo>>:${TAG} .
+            
+            # Save Docker image to a tar file
+            docker save -o my-app.tar <<pipeline.parameters.aws-ecr-repo>>:${TAG}
+            
+            # Save the tag information for the publish job
+            echo $TAG > tag.txt
+
+      - persist_to_workspace:
+          root: /home/circleci/workspace
+          paths:
+            - tag.txt  # Save the image tag information for the next job
+            - ecr_url.txt # Save the ECR URL for the next job
+            - my-app.tar  # Save the built Docker image
+
+  publish:
+    executor: java-executor
+    steps:
+      - checkout  # Checkout the source code
+      - attach_workspace:
+          at: /home/circleci/workspace  # Attach the workspace from the package job
+      - setup_remote_docker  # Enable remote Docker support
+
+      - aws-cli/setup:
+          aws-access-key-id: <<pipeline.parameters.aws-access-key-id>>
+          aws-region: <<pipeline.parameters.region>>
+          aws-secret-access-key: <<pipeline.parameters.aws-secret-access-key>>
+
+      - run:
+          name: Export Metadata
+          command: |
+            ls
+            export TAG="$(cat /home/circleci/workspace/tag.txt)"  # Read the image tag from the file
+            echo "TAG='${TAG}'"
+            echo "export TAG='${TAG}'" >> $BASH_ENV  # Persist the tag as an environment variable
+            
+            export ECR_URL="$(cat /home/circleci/workspace/ecr_url.txt)"  # Read the ECR_URL from the file
+            echo "ECR_URL='${ECR_URL}'"
+            echo "export ECR_URL='${ECR_URL}'" >> $BASH_ENV  # Persist the ECR_URL as an environment variable
+
+      # Load the previously build docker image
+      - run:
+          name: Load Docker image
+          command: docker load -i /home/circleci/workspace/my-app.tar  # Load the saved Docker image
+
+      # Authenticate with AWS ECR.
+      - run:
+          name: Login to ECR
+          command: |
+            echo "${ECR_URL}"
+            aws ecr get-login-password --region $<<pipeline.parameters.region>> | docker login --username AWS --password-stdin $ECR_URL
+
+      # Create a new tag for docker image to push into ECR
+      - run:
+          name: Tag Docker Image
+          command: |
+            docker tag <<pipeline.parameters.aws-ecr-repo>>:${TAG} $ECR_URL/<<pipeline.parameters.aws-ecr-repo>>:${TAG}
+
+      # Push docker image to ECR
+      - run:
+          name: Push Docker Image to AWS ECR
+          command: |
+            echo "Pushing image: $TAG"
+            docker push $ECR_URL/<<pipeline.parameters.aws-ecr-repo>>:$TAG  # Push the image to AWS ECR
+
+      - persist_to_workspace:
+          root: /home/circleci/workspace
+          paths:
+            - tag.txt  # Save the image tag information for the next job
+            - ecr_url.txt # Save the ECR URL for the next job
+  deploy:
+    executor: java-executor
+    working_directory: ~/workspace
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/workspace
+      - run:
+          name: Export Metadata
+          command: |
+            export TAG="$(cat ~/workspace/tag.txt)"
+            echo "TAG='${TAG}'"
+            echo "export TAG='${TAG}'" >> $BASH_ENV
+            
+            export ECR_URL="$(cat /home/circleci/workspace/ecr_url.txt)"
+            echo "ECR_URL='${ECR_URL}'"
+            echo "export ECR_URL='${ECR_URL}'" >> $BASH_ENV
+
+      - aws-cli/setup:
+          aws-access-key-id: <<pipeline.parameters.aws-access-key-id>>
+          aws-region: <<pipeline.parameters.region>>
+          aws-secret-access-key: <<pipeline.parameters.aws-secret-access-key>>
+
+      - aws-ecs/update-service:
+          family: << pipeline.parameters.task-definition-family >>
+          cluster-name: << pipeline.parameters.ecs-cluster-name >>
+          service-name: << pipeline.parameters.ecs-service-name >>
+          container-image-name-updates: container=<< pipeline.parameters.ecs-service-container-name >>,tag=${TAG}
+
+# Define the workflow
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          name: build  # Run the build job first
+      - package:
+          name: package
+          requires:
+            - build  # Ensure the package job runs only after the build is complete
+      - publish:
+          name: publish
+          requires:
+            - package  # Ensure the publishing job runs only after the package is complete
+      - deploy:
+          name: deploy
+          requires:
+            - publish
+#          filters:
+#            branches:
+#              only:
+#                - development # Add your branch name
