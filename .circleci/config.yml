@@ -88,7 +88,7 @@ jobs:
             JAR_FILE_PATH="target/$JAR_FILE_NAME"
             echo "$JAR_FILE_PATH" > /home/circleci/workspace/jar_file_path.txt
             
-            echo "$VERSION" > docker_image_version.txt
+            echo "$VERSION" > /home/circleci/workspace/docker_image_version.txt
 
           # Store test coverage reports
       - store_artifacts:
