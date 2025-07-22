@@ -1,4 +1,4 @@
-# 🦩 petInsurance
+# 🦩 microservice
 
 > A lightweight microservice built with Java 21 and powered by Maven or Gradle for modern development needs.
 

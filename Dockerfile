@@ -5,7 +5,7 @@ ARG JAR_FILE_PATH
 ARG JAR_FILE_NAME
 
 # Set environment variables for runtime
-ENV MICRO_SERVICE_NAME="petInsurance"
+ENV MICRO_SERVICE_NAME="microservice"
 ENV MAINTAINER="faiz.qureshi@everestek.com"
 ENV JAR_FILE_NAME=${JAR_FILE_NAME}
 ENV JAR_FILE_PATH=${JAR_FILE_PATH}
